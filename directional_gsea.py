@@ -7,7 +7,7 @@ import gseapy as gp
 
 entrez_to_symbol = {}
 symbol_to_entrez = {}
-df = pd.read_csv('df, header = 0, index_col = 0, compression='gzip')
+df = pd.read_csv('df', header = 0, index_col = 0, compression='gzip')
 cms_cmap = {'CMS1':'tab:green', 'CMS2_1':'tab:red', 'CMS2_2':'tab:purple', 'CMS3':'tab:brown', \
             'CMS4_1':'tab:pink', 'CMS4_2':'tab:olive', 'CMS4_3':'tab:cyan'}
 directional_pearson_correlation = pd.read_csv('directional_pearson_correlation.csv', header = 0, index_col = 0)
