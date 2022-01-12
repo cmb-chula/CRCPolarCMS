@@ -7,14 +7,14 @@ import gseapy as gp
 
 entrez_to_symbol = {}
 symbol_to_entrez = {}
-df = pd.read_csv('support_file/df.csv', header = 0, index_col = 0)
+df = pd.read_csv('./support_file/df.csv', header = 0, index_col = 0)
 cms_cmap = {'CMS1':'tab:green', 'CMS2_1':'tab:red', 'CMS2_2':'tab:purple', 'CMS3':'tab:brown', \
             'CMS4_1':'tab:pink', 'CMS4_2':'tab:olive', 'CMS4_3':'tab:cyan'}
-directional_pearson_correlation = pd.read_csv('support_file/directional_pearson_correlation.csv', header = 0, index_col = 0)
+directional_pearson_correlation = pd.read_csv('./support_file/directional_pearson_correlation.csv', header = 0, index_col = 0)
 directional_pearson_correlation.columns = [float(x) for x in directional_pearson_correlation.columns]
 directional_pearson_correlation.index = [str(x) for x in directional_pearson_correlation.index]
 
-with gzip.open('support_file/biomart.txt.gz', 'rt') as fin:
+with gzip.open('./support_file/biomart.txt.gz', 'rt') as fin:
     fin.readline()
  
     for line in fin.readlines():
@@ -78,7 +78,7 @@ def plot_directional_gsea(gsea, term, fdr = 0.05, linewidth = 4, display = False
     plt.show()
     
 def directional_gsea(term , target_genes, fdr = 0.05, linewidth = 4, display = True):
-    gsea_results = pickle.load(open('support_file/gsea_custom_genes_103121.pkl', 'rb'))
+    gsea_results = pickle.load(open('./support_file/gsea_custom_genes_103121.pkl', 'rb'))
     if term in gsea_results[0.06283185307179529].res2d.index:
         print(term)
         print(f"Given term ({term}) is in precompute geneset. Using precompute data.")
