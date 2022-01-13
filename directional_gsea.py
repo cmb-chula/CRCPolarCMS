@@ -25,11 +25,11 @@ with gzip.open('biomart.txt.gz', 'rt') as fin:
                 entrez_to_symbol[content[3]] = content[2]
                 symbol_to_entrez[content[2]] = content[3]
                 
-def plot_directional_gsea(gsea, term, fdr = 0.05, linewidth = 4, display = False):
+def plot_directional_gsea(gsea, term, target_genes, fdr = 0.05, linewidth = 4, display = False):
     if display:
-        print([entrez_to_symbol[x] for x in gsea[directional_pearson_correlation.columns.values[0]].res2d.loc[term, 'genes'].split(';')])
+        print([entrez_to_symbol[x] for x in target_genes])
     
-    plt.figure(figsize = (8, 4))
+    plt.figure(figsize = (15, 8))
     plt.subplot(1, 2, 1, polar = True)    
     
     for cms in cms_cmap.keys():
@@ -39,35 +39,36 @@ def plot_directional_gsea(gsea, term, fdr = 0.05, linewidth = 4, display = False
     plt.legend(markerscale = 2)
     index = 0
     
-    while index < directional_pearson_correlation.shape[1]:
-        angle = directional_pearson_correlation.columns.values[index]
-        
-        if gsea[angle].res2d.loc[term, 'fdr'] <= fdr and gsea[angle].res2d.loc[term, 'nes'] > 0:
-            start_angle = angle
-            angles = [angle]
-            end = index + 1
+    if not gsea is None:
+        while index < directional_pearson_correlation.shape[1]:
+            angle = directional_pearson_correlation.columns.values[index]
 
-            while end < directional_pearson_correlation.shape[1] and \
-                  gsea[directional_pearson_correlation.columns.values[end]].res2d.loc[term, 'fdr'] <= fdr and \
-                  gsea[directional_pearson_correlation.columns.values[end]].res2d.loc[term, 'nes'] > 0:
-                angles.append(directional_pearson_correlation.columns.values[end])
-                end += 1
-    
-            if len(angles) == 1:
-                plt.plot([angles[0] - np.pi/25, angles[0] + np.pi/25], [10, 10], linewidth = linewidth, c = 'tab:blue')
+            if gsea[angle].res2d.loc[term, 'fdr'] <= fdr and gsea[angle].res2d.loc[term, 'nes'] > 0:
+                start_angle = angle
+                angles = [angle]
+                end = index + 1
+
+                while end < directional_pearson_correlation.shape[1] and \
+                      gsea[directional_pearson_correlation.columns.values[end]].res2d.loc[term, 'fdr'] <= fdr and \
+                      gsea[directional_pearson_correlation.columns.values[end]].res2d.loc[term, 'nes'] > 0:
+                    angles.append(directional_pearson_correlation.columns.values[end])
+                    end += 1
+
+                if len(angles) == 1:
+                    plt.plot([angles[0] - np.pi/25, angles[0] + np.pi/25], [10, 10], linewidth = linewidth, c = 'tab:blue')
+                else:
+                    plt.plot(angles, [10] * len(angles), linewidth = linewidth, c = 'tab:blue')
+
+                index = end
+
             else:
-                plt.plot(angles, [10] * len(angles), linewidth = linewidth, c = 'tab:blue')
-            
-            index = end
-        
-        else:
-            index += 1
-    
+                index += 1
+
     plt.title(term)
     
     plt.subplot(1, 2, 2, polar = True)
     
-    genes = gsea[directional_pearson_correlation.columns.values[0]].res2d.loc[term, 'genes'].split(';')
+    genes = target_genes
     mean = df[genes].mean(axis=1).to_numpy().reshape([-1, 1])
     values = StandardScaler().fit_transform(mean)
     cm = plt.cm.get_cmap('bwr')
@@ -82,6 +83,7 @@ def directional_gsea(term , target_genes, fdr = 0.05, linewidth = 4, display = T
     if term in gsea_results[0.06283185307179529].res2d.index:
         print(term)
         print(f"Given term ({term}) is in precompute geneset. Using precompute data.")
+        target_genes = gsea[directional_pearson_correlation.columns.values[0]].res2d.loc[term, 'genes'].split(';')
     else:
         print(f"Compute {term}")
         gsea_results = dict()
@@ -92,9 +94,24 @@ def directional_gsea(term , target_genes, fdr = 0.05, linewidth = 4, display = T
             gsea_genesets_symbols[s] = [entrez_to_symbol[g] for g in gsea_genesets[s]]
         for angle in directional_pearson_correlation.columns.values:
             temp = pd.concat([pd.DataFrame(directional_pearson_correlation.index.values, index = directional_pearson_correlation.index), directional_pearson_correlation[angle]], axis = 1)
-            gsea_results[angle] = gp.prerank(rnk = temp, gene_sets = gsea_genesets,
-                                             processes = 4,
-                                             permutation_num = 1000,
-                                             outdir=None,
-                                             format = 'png', seed = 4649)
-    plot_directional_gsea(gsea_results, term, fdr = fdr, linewidth = linewidth, display = display)
+            try:
+                gsea_results[angle] = gp.prerank(rnk = temp, gene_sets = gsea_genesets,
+                                                 processes = 4,
+                                                 permutation_num = 1000,
+                                                 outdir=None,
+                                                 format = 'png', seed = 4649)
+            except:
+                print(f"{bcolors.WARNING}WARNING: The number of genes is less than 15. The angle will not be computed! {bcolors.ENDC}")
+                gsea_results = None
+                break
+    plot_directional_gsea(gsea_results, term, target_genes, fdr = fdr, linewidth = linewidth, display = display)
+    
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[91m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
