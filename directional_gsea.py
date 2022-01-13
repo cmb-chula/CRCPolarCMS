@@ -84,6 +84,10 @@ def directional_gsea(term , target_genes, fdr = 0.05, linewidth = 4, display = T
         print(term)
         print(f"Given term ({term}) is in precompute geneset. Using precompute data.")
         target_genes = gsea_results[directional_pearson_correlation.columns.values[0]].res2d.loc[term, 'genes'].split(';')
+    elif len(target_genes) < 15:
+        print(f"{bcolors.WARNING}WARNING: The number of genes is less than 15. The angle will not be computed! {bcolors.ENDC}")
+        target_genes = [x for x in df.columns if x in entrez_to_symbol and entrez_to_symbol[x] in target_genes]
+        gsea_results = None
     else:
         print(f"Compute {term}")
         gsea_results = dict()
@@ -94,16 +98,13 @@ def directional_gsea(term , target_genes, fdr = 0.05, linewidth = 4, display = T
             gsea_genesets_symbols[s] = [entrez_to_symbol[g] for g in gsea_genesets[s]]
         for angle in directional_pearson_correlation.columns.values:
             temp = pd.concat([pd.DataFrame(directional_pearson_correlation.index.values, index = directional_pearson_correlation.index), directional_pearson_correlation[angle]], axis = 1)
-            try:
-                gsea_results[angle] = gp.prerank(rnk = temp, gene_sets = gsea_genesets,
-                                                 processes = 4,
-                                                 permutation_num = 1000,
-                                                 outdir=None,
-                                                 format = 'png', seed = 4649)
-            except:
-                print(f"{bcolors.WARNING}WARNING: The number of genes is less than 15. The angle will not be computed! {bcolors.ENDC}")
-                gsea_results = None
-                break
+           
+            gsea_results[angle] = gp.prerank(rnk = temp, gene_sets = gsea_genesets,
+                                             processes = 4,
+                                             permutation_num = 1000,
+                                             outdir=None,
+                                             seed = 4649)
+            
     plot_directional_gsea(gsea_results, term, target_genes, fdr = fdr, linewidth = linewidth, display = display)
     
 class bcolors:
