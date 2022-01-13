@@ -83,7 +83,7 @@ def directional_gsea(term , target_genes, fdr = 0.05, linewidth = 4, display = T
     if term in gsea_results[0.06283185307179529].res2d.index:
         print(term)
         print(f"Given term ({term}) is in precompute geneset. Using precompute data.")
-        target_genes = gsea[directional_pearson_correlation.columns.values[0]].res2d.loc[term, 'genes'].split(';')
+        target_genes = gsea_results[directional_pearson_correlation.columns.values[0]].res2d.loc[term, 'genes'].split(';')
     else:
         print(f"Compute {term}")
         gsea_results = dict()
